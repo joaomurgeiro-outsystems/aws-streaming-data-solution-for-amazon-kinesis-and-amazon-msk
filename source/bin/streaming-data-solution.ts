@@ -19,7 +19,7 @@ new ApiGwKdsLambda(
     app,
     'aws-streaming-data-solution-for-kinesis-using-api-gateway-and-lambda',
     {
-        description: `(${solutionIdKds}) - AWS Streaming Data Solution for Amazon Kinesis (APIGW -> KDS -> Lambda). Version %%VERSION%%`,
+        description: `(${solutionIdKds}) - AWS Streaming Data Solution for Amazon Kinesis (APIGW -> KDS -> Lambda). Version 2.0`,
         solutionId: solutionIdKds
     }
 );

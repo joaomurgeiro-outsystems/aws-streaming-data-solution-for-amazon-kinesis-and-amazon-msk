@@ -14,18 +14,27 @@
 import * as cdk from '@aws-cdk/core';
 import * as lambda from '@aws-cdk/aws-lambda';
 import * as logs from '@aws-cdk/aws-logs';
+import * as dynamodb from '@aws-cdk/aws-dynamodb';
+
 
 import { ApiGatewayToKinesisStreams } from '@aws-solutions-constructs/aws-apigateway-kinesisstreams';
 import { KinesisStreamsToLambda } from '@aws-solutions-constructs/aws-kinesisstreams-lambda';
 
 import { DataStream } from '../lib/kds-data-stream';
-import { SolutionHelper } from '../lib/solution-helper';
+//import { SolutionHelper } from '../lib/solution-helper';
 import { SolutionStackProps } from './solution-props';
 import { DataStreamMonitoring } from '../lib/kds-monitoring';
+//import { DynamoDB } from '../lib/dynamo-db';
 
 export class ApiGwKdsLambda extends cdk.Stack {
     constructor(scope: cdk.Construct, id: string, props: SolutionStackProps) {
         super(scope, id, props);
+
+        //new DynamoDB(this, 'DynamoDBTable');
+        const table = new dynamodb.Table(this, 'DynamoDBTable', {
+            partitionKey: { name: 'graphId', type: dynamodb.AttributeType.STRING },
+            tableName: "DynamoDBTable"
+        });
 
         //---------------------------------------------------------------------
         // Kinesis Data Stream configuration
@@ -146,6 +155,8 @@ export class ApiGwKdsLambda extends cdk.Stack {
             }
         });
 
+        table.grantReadWriteData(kdsToLambda.lambdaFunction);
+
         //---------------------------------------------------------------------
         // Monitoring (dashboard and alarms) configuration
 
@@ -157,14 +168,14 @@ export class ApiGwKdsLambda extends cdk.Stack {
         //---------------------------------------------------------------------
         // Solution metrics
 
-        new SolutionHelper(this, 'SolutionHelper', {
+        /*new SolutionHelper(this, 'SolutionHelper', {
             solutionId: props.solutionId,
             pattern: ApiGwKdsLambda.name,
 
             shardCount: shardCount.valueAsNumber,
             retentionHours: dataRetention.valueAsNumber,
             enhancedMonitoring: enhancedMonitoring.valueAsString
-        });
+        });*/
 
         //---------------------------------------------------------------------
         // Template metadata
@@ -218,6 +229,11 @@ export class ApiGwKdsLambda extends cdk.Stack {
 
         //---------------------------------------------------------------------
         // Stack outputs
+        /*
+        The optional Outputs section declares output values that you can import into other stacks 
+        (to create cross-stack references), return in response (to describe stack calls), or view 
+        on the AWS CloudFormation console.
+        */
 
         new cdk.CfnOutput(this, 'ProxyApiId', {
             description: 'ID of the proxy API',

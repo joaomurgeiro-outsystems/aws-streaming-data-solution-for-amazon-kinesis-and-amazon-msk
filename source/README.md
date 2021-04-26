@@ -47,13 +47,13 @@ We'll also modify the entrypoint file (`bin/streaming-data-solution.ts`) so that
 
 ```typescript
 #!/usr/bin/env node
-import 'source-map-support/register';
+/*import 'source-map-support/register';
 import * as cdk from '@aws-cdk/core';
 
 import { StreamingMonitoringStack } from '../patterns/streaming-monitoring-stack';
 const app = new cdk.App();
 
-new StreamingMonitoringStack(app, 'MonitoringStack');
+new StreamingMonitoringStack(app, 'MonitoringStack');*/
 ```
 
 ### 5. Prepare the stack for deployment

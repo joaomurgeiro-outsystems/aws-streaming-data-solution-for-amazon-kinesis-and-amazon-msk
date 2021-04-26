@@ -13,10 +13,10 @@
 
 import * as cdk from '@aws-cdk/core';
 import * as kinesis from '@aws-cdk/aws-kinesis';
-import * as lambda from '@aws-cdk/aws-lambda';
-import * as iam from '@aws-cdk/aws-iam';
+//import * as lambda from '@aws-cdk/aws-lambda';
+//import * as iam from '@aws-cdk/aws-iam';
 
-import { ExecutionRole } from './lambda-role-cloudwatch';
+//import { ExecutionRole } from './lambda-role-cloudwatch';
 
 export interface DataStreamProps {
     readonly shardCount: number;
@@ -40,10 +40,10 @@ export class DataStream extends cdk.Construct {
             retentionPeriod: props.retentionPeriod
         });
 
-        this.createCustomResource(props.enableEnhancedMonitoring);
+        //this.createCustomResource(props.enableEnhancedMonitoring);
     }
 
-    private createCustomResource(enableEnhancedMonitoring: string) {
+    /*private createCustomResource(enableEnhancedMonitoring: string) {
         const monitoringPolicy = new iam.PolicyDocument({
             statements: [new iam.PolicyStatement({
                 resources: ['*'],
@@ -82,5 +82,5 @@ export class DataStream extends cdk.Construct {
             },
             resourceType: 'Custom::EnhancedMonitoring'
         });
-    }
+    }*/
 }

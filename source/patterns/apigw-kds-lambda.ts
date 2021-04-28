@@ -31,9 +31,15 @@ export class ApiGwKdsLambda extends cdk.Stack {
         super(scope, id, props);
 
         //new DynamoDB(this, 'DynamoDBTable');
-        const table = new dynamodb.Table(this, 'DynamoDBTable', {
+        const graph_table = new dynamodb.Table(this, 'graph-table', {
             partitionKey: { name: 'graphId', type: dynamodb.AttributeType.STRING },
-            tableName: "DynamoDBTable"
+            tableName: "graph-table"
+        });
+
+        const nodes_table = new dynamodb.Table(this, 'nodes-table', {
+            partitionKey: { name: 'graphId', type: dynamodb.AttributeType.STRING },
+            sortKey: { name: 'nodeId', type: dynamodb.AttributeType.STRING },
+            tableName: "nodes-table"
         });
 
         //---------------------------------------------------------------------
@@ -155,7 +161,8 @@ export class ApiGwKdsLambda extends cdk.Stack {
             }
         });
 
-        table.grantReadWriteData(kdsToLambda.lambdaFunction);
+        graph_table.grantReadWriteData(kdsToLambda.lambdaFunction);
+        nodes_table.grantReadWriteData(kdsToLambda.lambdaFunction);
 
         //---------------------------------------------------------------------
         // Monitoring (dashboard and alarms) configuration

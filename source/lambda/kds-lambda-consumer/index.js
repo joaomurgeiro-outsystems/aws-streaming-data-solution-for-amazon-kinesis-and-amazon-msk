@@ -14,27 +14,78 @@ var AWS = require('aws-sdk');
 
 exports.handler = (event, context, callback) => {
     console.log(`Received event: ${JSON.stringify(event, null, 2)}`);
+    const dynamo = new AWS.DynamoDB.DocumentClient();
 
     for (const record of event.Records) {
-        const payload = Buffer.from(record.kinesis.data, 'base64').toString('ascii');
-        //const graphId = Buffer.from(record.kinesis.partitionKey, 'base64').toString('ascii');
-        console.log(`Partition Key: ${record.kinesis.partitionKey}`);
-        console.log(`Decoded payload: ${payload}`);
-        
-        const dynamo = new AWS.DynamoDB.DocumentClient();
-        const TableName = 'DynamoDBTable';
+        const data = JSON.parse( Buffer.from(record.kinesis.data, 'base64').toString('ascii') ); // Base64 -> JSON
+        console.log(`Decoded payload: ${data}`);
+        console.log(`Event Type: ${data.eventType}`);
         const Item = {};
-        Item['graphId'] = record.kinesis.partitionKey;
-        Item['data'] = payload;
-        dynamo.put({TableName, Item}, function(err, data) {
-            if (err) {
-              console.log("Error", err);
-              callback(err, null);
-            } else {
-              console.log("Success", data);
-              callback(null, data);
-            }
-          });
+        const Key = {};
+
+        switch(data.eventType) {
+          case 'graphPut':
+            Item['graphId'] = data.partitionKey;
+            Item['info'] = JSON.stringify(data.info);
+
+            dynamo.put({TableName: "graph-table", Item}, function(err, data) {
+                if (err) { callback(err, null); } 
+                else { console.log("Successfull operation"); callback(null, data); }
+              });
+
+          break;
+          case 'nodePut':
+            Item['graphId'] = data.partitionKey;
+            Item['nodeId'] = data.sortKey;
+            Item['info'] = JSON.stringify(data.info);
+
+            dynamo.put({TableName: "nodes-table", Item}, function(err, data) {
+                if (err) { callback(err, null); } 
+                else { console.log("Successfull operation"); callback(null, data); }
+              });
+
+          break;
+          case 'graphGet':
+            Key['graphId'] = data.partitionKey;
+
+            dynamo.get({TableName: "graph-table", Key}, function(err, data) {
+                if (err) { callback(err, null); } 
+                else { console.log("Successfull operation"); callback(null, data); }
+              });
+
+          break;
+          case 'nodeGet':
+            Key['graphId'] = data.partitionKey;
+            Key['nodeId'] = data.sortKey;
+
+            dynamo.get({TableName: "nodes-table", Key}, function(err, data) {
+                if (err) { callback(err, null); } 
+                else { console.log("Successfull operation"); console.log(data); callback(null, data); }
+              });
+
+          break;
+          case 'graphDelete':
+            Key['graphId'] = data.partitionKey;
+
+            dynamo.delete({TableName: "graph-table", Key}, function(err, data) {
+                if (err) { callback(err, null); } 
+                else { console.log("Successfull operation"); callback(null, data); }
+              });
+
+          break;
+          case 'nodeDelete':
+            Key['graphId'] = data.partitionKey;
+            Key['nodeId'] = data.sortKey;
+
+            dynamo.delete({TableName: "nodes-table", Key}, function(err, data) {
+                if (err) { callback(err, null); } 
+                else { console.log("Successfull operation"); callback(null, data); }
+              });
+
+          break;
+          default:
+            console.log("Event Type not indentified!")
+        }
     }
 
     return `Successfully processed ${event.Records.length} records.`;

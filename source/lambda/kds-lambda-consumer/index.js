@@ -17,76 +17,119 @@ exports.handler = (event, context, callback) => {
     const dynamo = new AWS.DynamoDB.DocumentClient();
 
     for (const record of event.Records) {
-        const data = JSON.parse( Buffer.from(record.kinesis.data, 'base64').toString('ascii') ); // Base64 -> JSON
-        console.log(`Decoded payload: ${data}`);
-        console.log(`Event Type: ${data.eventType}`);
-        const Item = {};
-        const Key = {};
+      const data = JSON.parse( Buffer.from(record.kinesis.data, 'base64').toString('ascii') ); // Base64 -> JSON
+      console.log(`Event Type: ${data.eventType}`);
 
-        switch(data.eventType) {
-          case 'graphPut':
-            Item['graphId'] = data.partitionKey;
-            Item['info'] = JSON.stringify(data.info);
+      switch(data.eventType) {
+        case 'graphPut':
+          var params = {
+            TableName: "graph-table",
+            Item:{
+              "graphId": data.partitionKey,
+              "info":JSON.stringify(data.info)
+            }
+          }
 
-            dynamo.put({TableName: "graph-table", Item}, function(err, data) {
-                if (err) { callback(err, null); } 
-                else { console.log("Successfull operation"); callback(null, data); }
-              });
+          dynamo.put(params, function(err, data) {
+              if (err) { callback(err, null); } 
+              else { console.log("Successfull operation"); callback(null, data); }
+            });
 
-          break;
-          case 'nodePut':
-            Item['graphId'] = data.partitionKey;
-            Item['nodeId'] = data.sortKey;
-            Item['info'] = JSON.stringify(data.info);
+        break;
+        case 'graphDelete':
+          Key['graphId'] = data.partitionKey;
 
-            dynamo.put({TableName: "nodes-table", Item}, function(err, data) {
-                if (err) { callback(err, null); } 
-                else { console.log("Successfull operation"); callback(null, data); }
-              });
+          dynamo.delete({TableName: "graph-table", Key}, function(err, data) {
+              if (err) { callback(err, null); } 
+              else { console.log("Successfull operation"); callback(null, data); }
+            });
 
-          break;
-          case 'graphGet':
-            Key['graphId'] = data.partitionKey;
+        break;
+        case 'graphGet':
+          var params = {
+            TableName: "graph-table",
+            Key:{
+              "graphId": data.partitionKey
+            }
+          }
 
-            dynamo.get({TableName: "graph-table", Key}, function(err, data) {
-                if (err) { callback(err, null); } 
-                else { console.log("Successfull operation"); callback(null, data); }
-              });
+          dynamo.get(params, function(err, data) {
+              if (err) { callback(err, null); } 
+              else { console.log("Successfull operation"); console.log(data); callback(null, data); }
+            });
 
-          break;
-          case 'nodeGet':
-            Key['graphId'] = data.partitionKey;
-            Key['nodeId'] = data.sortKey;
+        break;
+        case 'put':     // insert node or link
+          var params = {
+            TableName: "nodes-table",
+            Item:{
+              "graphId": data.partitionKey,
+              "nodeId": data.sortKey,
+              "info":JSON.stringify(data.info)
+            }
+          }
 
-            dynamo.get({TableName: "nodes-table", Key}, function(err, data) {
-                if (err) { callback(err, null); } 
-                else { console.log("Successfull operation"); console.log(data); callback(null, data); }
-              });
+          dynamo.put(params, function(err, data) {
+              if (err) { callback(err, null); } 
+              else { console.log("Successfull operation"); callback(null, data); }
+            });
 
-          break;
-          case 'graphDelete':
-            Key['graphId'] = data.partitionKey;
+        break;
+        case 'getOne':      // get one node or link
+          var params = {
+            TableName: "nodes-table",
+            Key:{
+              "graphId": data.partitionKey,
+              "nodeId": data.sortKey
+            }
+          }
 
-            dynamo.delete({TableName: "graph-table", Key}, function(err, data) {
-                if (err) { callback(err, null); } 
-                else { console.log("Successfull operation"); callback(null, data); }
-              });
+          dynamo.get(params, function(err, data) {
+              if (err) { callback(err, null); } 
+              else { console.log("Successfull operation"); console.log(data); callback(null, data); }
+            });
 
-          break;
-          case 'nodeDelete':
-            Key['graphId'] = data.partitionKey;
-            Key['nodeId'] = data.sortKey;
+        break;
+        case 'getAll':      // get all nodes and links, add BEGINS_WITH to get nodes or links
+          var params = {
+            TableName: "nodes-table",
+            KeyConditions: {
+              "graphId": {
+                ComparisonOperator: "EQ",
+                AttributeValueList: [ data.partitionKey ]
+              },
+              /*"nodeId": {
+                ComparisonOperator: "BEGINS_WITH",
+                AttributeValueList: [ "node#" ]
+              }*/
+            }
+          }
 
-            dynamo.delete({TableName: "nodes-table", Key}, function(err, data) {
-                if (err) { callback(err, null); } 
-                else { console.log("Successfull operation"); callback(null, data); }
-              });
+          dynamo.query(params, function(err, data) {
+              if (err) { callback(err, null); } 
+              else { console.log("Successfull operation"); console.log(data); callback(null, data); }
+            });
 
-          break;
-          default:
-            console.log("Event Type not indentified!")
-        }
+        break;  
+        case 'deleteOne':     // delete one node or link
+          var params = {
+            TableName: "nodes-table",
+            Key:{
+              "graphId": data.partitionKey,
+              "nodeId": data.sortKey
+            }
+          }
+
+          dynamo.delete(params, function(err, data) {
+              if (err) { callback(err, null); } 
+              else { console.log("Successfull operation"); callback(null, data); }
+            });
+
+        break;
+        default:
+          console.log("Event Type not indentified!")
+      }
+
+      return `Successfully processed ${event.Records.length} records.`;
     }
-
-    return `Successfully processed ${event.Records.length} records.`;
 };

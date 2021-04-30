@@ -15,6 +15,7 @@ import * as cdk from '@aws-cdk/core';
 import * as lambda from '@aws-cdk/aws-lambda';
 import * as logs from '@aws-cdk/aws-logs';
 import * as dynamodb from '@aws-cdk/aws-dynamodb';
+import * as apigw from '@aws-cdk/aws-apigateway';
 
 
 import { ApiGatewayToKinesisStreams } from '@aws-solutions-constructs/aws-apigateway-kinesisstreams';
@@ -30,17 +31,32 @@ export class ApiGwKdsLambda extends cdk.Stack {
     constructor(scope: cdk.Construct, id: string, props: SolutionStackProps) {
         super(scope, id, props);
 
-        //new DynamoDB(this, 'DynamoDBTable');
-        const graph_table = new dynamodb.Table(this, 'graph-table', {
-            partitionKey: { name: 'graphId', type: dynamodb.AttributeType.STRING },
-            tableName: "graph-table"
+        //---------------------------------------------------------------------
+        // API for GET operations configuration
+
+        const api = new apigw.RestApi(this, 'API-for-GET-operations');
+
+        const lambdaGet = new lambda.Function( this, 'GetHandler', {
+            runtime: lambda.Runtime.NODEJS_12_X,
+            handler: 'lambdaGet.handler',
+            code: lambda.Code.fromAsset('lambda')
         });
 
-        const nodes_table = new dynamodb.Table(this, 'nodes-table', {
+        const lambdaGetInteg = new apigw.LambdaIntegration(lambdaGet);
+        api.root.addMethod('GET', lambdaGetInteg);
+
+
+        //---------------------------------------------------------------------
+        // Dynamo DB configuration
+
+        //new DynamoDB(this, 'DynamoDBTable');
+        const nodes_links_table = new dynamodb.Table(this, 'nodes-links-table', {
             partitionKey: { name: 'graphId', type: dynamodb.AttributeType.STRING },
-            sortKey: { name: 'nodeId', type: dynamodb.AttributeType.STRING },
-            tableName: "nodes-table"
+            sortKey: { name: 'nodeLinkId', type: dynamodb.AttributeType.STRING },
+            tableName: "nodes-links-table"
         });
+
+        nodes_links_table.grantReadData(lambdaGet);
 
         //---------------------------------------------------------------------
         // Kinesis Data Stream configuration
@@ -161,8 +177,7 @@ export class ApiGwKdsLambda extends cdk.Stack {
             }
         });
 
-        graph_table.grantReadWriteData(kdsToLambda.lambdaFunction);
-        nodes_table.grantReadWriteData(kdsToLambda.lambdaFunction);
+        nodes_links_table.grantReadWriteData(kdsToLambda.lambdaFunction);
 
         //---------------------------------------------------------------------
         // Monitoring (dashboard and alarms) configuration

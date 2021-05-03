@@ -61,23 +61,37 @@ exports.handler = (event, context, callback) => {
         break;
         case 'put':     // insert node or link
           var params = {
-            TableName: "nodes-table",
+            TableName: "nodes-links-table",
             Item:{
               "graphId": data.partitionKey,
-              "nodeId": data.sortKey,
-              "info":JSON.stringify(data.info)
+              "nodeLinkId": data.sortKey,
+              "type": data.type,
+              "info":data.info   // JSON.stringify
             }
           }
 
           dynamo.put(params, function(err, data) {
               if (err) { callback(err, null); } 
-              else { console.log("Successfull operation"); callback(null, data); }
-            });
+              else { 
+                console.log("Successfull operation"); 
+                var response = {
+                  statusCode: 200,
+                  headers: {
+                      "Content-Type": "application/json",
+                      "Access-Control-Allow-Origin": "*",
+                      "Access-Control-Allow-Methods": "GET,POST,OPTIONS"
+                  },
+                  body: JSON.stringify(data),
+                  isBase64Encoded: false
+                };
+                callback(null, response);
+              } 
+          });
 
         break;
         case 'getOne':      // get one node or link
           var params = {
-            TableName: "nodes-table",
+            TableName: "nodes-links-table",
             Key:{
               "graphId": data.partitionKey,
               "nodeId": data.sortKey
@@ -92,7 +106,7 @@ exports.handler = (event, context, callback) => {
         break;
         case 'getAll':      // get all nodes and links, add BEGINS_WITH to get nodes or links
           var params = {
-            TableName: "nodes-table",
+            TableName: "nodes-links-table",
             KeyConditions: {
               "graphId": {
                 ComparisonOperator: "EQ",
@@ -113,7 +127,7 @@ exports.handler = (event, context, callback) => {
         break;  
         case 'deleteOne':     // delete one node or link
           var params = {
-            TableName: "nodes-table",
+            TableName: "nodes-links-table",
             Key:{
               "graphId": data.partitionKey,
               "nodeId": data.sortKey

@@ -4,12 +4,14 @@ const dynamo = new AWS.DynamoDB.DocumentClient();
 
 exports.handler = (event, context, callback) => {
 
+  console.log(event)
+
     var params = {
         TableName: "nodes-links-table",
         KeyConditions: {
           "graphId": {
             ComparisonOperator: "EQ",
-            AttributeValueList: [ data.partitionKey ]
+            AttributeValueList: [ /*event.queryStringParameters.*/"graphId" ]
           },
           /*"nodeId": {
             ComparisonOperator: "BEGINS_WITH",
@@ -23,13 +25,14 @@ exports.handler = (event, context, callback) => {
         else { 
             console.log("Successfull operation"); 
             var response = {
-                statusCode: 200,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS'
-                },
-                body: JSON.stringify(data),
-                isBase64Encoded: false
+              statusCode: 200,
+              headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET,POST,OPTIONS"
+              },
+              body: JSON.stringify(data),
+              isBase64Encoded: false
             };
             callback(null, response);
         }

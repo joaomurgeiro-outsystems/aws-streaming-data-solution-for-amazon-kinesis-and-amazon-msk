@@ -52,7 +52,7 @@ export class ApiGwKdsLambda extends cdk.Stack {
         //new DynamoDB(this, 'DynamoDBTable');
         const nodes_links_table = new dynamodb.Table(this, 'nodes-links-table', {
             partitionKey: { name: 'graphId', type: dynamodb.AttributeType.STRING },
-            sortKey: { name: 'nodeLinkId', type: dynamodb.AttributeType.STRING },
+            sortKey: { name: 'nodeLinkId', type: dynamodb.AttributeType.NUMBER },
             tableName: "nodes-links-table"
         });
 

@@ -21,7 +21,61 @@ exports.handler = (event, context, callback) => {
       console.log(`Event Type: ${data.eventType}`);
 
       switch(data.eventType) {
-        case 'graphPut':
+        case 'put':     // insert node or link
+          var params = {
+            TableName: "nodes-links-table",
+            Item:{
+              "graphId": data.partitionKey,
+              "nodeLinkId": data.sortKey,
+              "type": data.type,
+              "info":data.info   // JSON.stringify
+            }
+          }
+
+          dynamo.put(params, function(err, data) {
+              if (err) { callback(err, null); } 
+              else { 
+                console.log("Successfull operation"); 
+                var response = {
+                  statusCode: 200,
+                  headers: {
+                      "Content-Type": "application/json",
+                      "Access-Control-Allow-Origin": "*",
+                      "Access-Control-Allow-Methods": "GET,POST,OPTIONS"
+                  },
+                  body: JSON.stringify(data),
+                  isBase64Encoded: false
+                };
+                callback(null, response);
+              } 
+          });
+
+        break; 
+        case 'delete':     // delete one node or link
+          var params = {
+            TableName: "nodes-links-table",
+            Key:{
+              "graphId": data.partitionKey,
+              "nodeLinkId": data.sortKey
+            }
+          }
+
+          dynamo.delete(params, function(err, data) {
+              if (err) { callback(err, null); } 
+              else { console.log("Successfull operation"); callback(null, data); }
+            });
+
+        break;
+        default:
+          console.log("Event Type not indentified!")
+      }
+
+      return `Successfully processed ${event.Records.length} records.`;
+    }
+};
+
+/*
+case 'graphPut':
           var params = {
             TableName: "graph-table",
             Item:{
@@ -59,91 +113,4 @@ exports.handler = (event, context, callback) => {
             });
 
         break;
-        case 'put':     // insert node or link
-          var params = {
-            TableName: "nodes-links-table",
-            Item:{
-              "graphId": data.partitionKey,
-              "nodeLinkId": data.sortKey,
-              "type": data.type,
-              "info":data.info   // JSON.stringify
-            }
-          }
-
-          dynamo.put(params, function(err, data) {
-              if (err) { callback(err, null); } 
-              else { 
-                console.log("Successfull operation"); 
-                var response = {
-                  statusCode: 200,
-                  headers: {
-                      "Content-Type": "application/json",
-                      "Access-Control-Allow-Origin": "*",
-                      "Access-Control-Allow-Methods": "GET,POST,OPTIONS"
-                  },
-                  body: JSON.stringify(data),
-                  isBase64Encoded: false
-                };
-                callback(null, response);
-              } 
-          });
-
-        break;
-        case 'getOne':      // get one node or link
-          var params = {
-            TableName: "nodes-links-table",
-            Key:{
-              "graphId": data.partitionKey,
-              "nodeId": data.sortKey
-            }
-          }
-
-          dynamo.get(params, function(err, data) {
-              if (err) { callback(err, null); } 
-              else { console.log("Successfull operation"); console.log(data); callback(null, data); }
-            });
-
-        break;
-        case 'getAll':      // get all nodes and links, add BEGINS_WITH to get nodes or links
-          var params = {
-            TableName: "nodes-links-table",
-            KeyConditions: {
-              "graphId": {
-                ComparisonOperator: "EQ",
-                AttributeValueList: [ data.partitionKey ]
-              },
-              /*"nodeId": {
-                ComparisonOperator: "BEGINS_WITH",
-                AttributeValueList: [ "node#" ]
-              }*/
-            }
-          }
-
-          dynamo.query(params, function(err, data) {
-              if (err) { callback(err, null); } 
-              else { console.log("Successfull operation"); console.log(data); callback(null, data); }
-            });
-
-        break;  
-        case 'deleteOne':     // delete one node or link
-          var params = {
-            TableName: "nodes-links-table",
-            Key:{
-              "graphId": data.partitionKey,
-              "nodeId": data.sortKey
-            }
-          }
-
-          dynamo.delete(params, function(err, data) {
-              if (err) { callback(err, null); } 
-              else { console.log("Successfull operation"); callback(null, data); }
-            });
-
-        break;
-        default:
-          console.log("Event Type not indentified!")
-      }
-
-      return `Successfully processed ${event.Records.length} records.`;
-    }
-};
+        */

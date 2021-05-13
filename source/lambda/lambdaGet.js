@@ -11,7 +11,7 @@ exports.handler = (event, context, callback) => {
         KeyConditions: {
           "graphId": {
             ComparisonOperator: "EQ",
-            AttributeValueList: [ /*event.queryStringParameters.*/"graphId" ]
+            AttributeValueList: [ event.queryStringParameters.graphId ]
           },
           /*"nodeId": {
             ComparisonOperator: "BEGINS_WITH",

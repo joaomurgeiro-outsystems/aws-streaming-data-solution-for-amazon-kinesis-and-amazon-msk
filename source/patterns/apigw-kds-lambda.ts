@@ -34,22 +34,40 @@ export class ApiGwKdsLambda extends cdk.Stack {
         //---------------------------------------------------------------------
         // API for GET operations configuration
 
-        const api = new apigw.RestApi(this, 'API-for-GET-operations');
+        const api = new apigw.RestApi(this, 'AUX-API');
 
         const lambdaGet = new lambda.Function( this, 'GetHandler', {
             runtime: lambda.Runtime.NODEJS_12_X,
             handler: 'lambdaGet.handler',
             code: lambda.Code.fromAsset('lambda')
         });
-
         const lambdaGetInteg = new apigw.LambdaIntegration(lambdaGet);
+
+        const lambdaGraphsPost = new lambda.Function( this, 'GraphsPostHandler', {
+            runtime: lambda.Runtime.NODEJS_12_X,
+            handler: 'lambdaGraphsPost.handler',
+            code: lambda.Code.fromAsset('lambda')
+        });
+        const lambdaGraphsPostInteg = new apigw.LambdaIntegration(lambdaGraphsPost);
+
+        const lambdaGraphsGet = new lambda.Function( this, 'GraphsGetHandler', {
+            runtime: lambda.Runtime.NODEJS_12_X,
+            handler: 'lambdaGraphsGet.handler',
+            code: lambda.Code.fromAsset('lambda')
+        });
+        const lambdaGraphsGetInteg = new apigw.LambdaIntegration(lambdaGraphsGet);
+
+
         api.root.addMethod('GET', lambdaGetInteg);
+
+        const apiGraphs = api.root.addResource('graphs');
+        apiGraphs.addMethod('POST', lambdaGraphsPostInteg);
+        apiGraphs.addMethod('GET', lambdaGraphsGetInteg);
 
 
         //---------------------------------------------------------------------
         // Dynamo DB configuration
 
-        //new DynamoDB(this, 'DynamoDBTable');
         const nodes_links_table = new dynamodb.Table(this, 'nodes-links-table', {
             partitionKey: { name: 'graphId', type: dynamodb.AttributeType.STRING },
             sortKey: { name: 'nodeLinkId', type: dynamodb.AttributeType.STRING },
@@ -57,6 +75,15 @@ export class ApiGwKdsLambda extends cdk.Stack {
         });
 
         nodes_links_table.grantReadData(lambdaGet);
+
+        const graphs_table = new dynamodb.Table(this, 'graphs-table', {
+            partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
+            sortKey: { name: 'graphId', type: dynamodb.AttributeType.STRING },
+            tableName: "graphs-table"
+        });
+
+        graphs_table.grantReadWriteData(lambdaGraphsPost);
+        graphs_table.grantReadData(lambdaGraphsGet);
 
         //---------------------------------------------------------------------
         // Kinesis Data Stream configuration

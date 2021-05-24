@@ -16,6 +16,7 @@ import * as lambda from '@aws-cdk/aws-lambda';
 import * as logs from '@aws-cdk/aws-logs';
 import * as dynamodb from '@aws-cdk/aws-dynamodb';
 import * as apigw from '@aws-cdk/aws-apigateway';
+import * as appsync from '@aws-cdk/aws-appsync';
 
 
 import { ApiGatewayToKinesisStreams } from '@aws-solutions-constructs/aws-apigateway-kinesisstreams';
@@ -30,6 +31,43 @@ import { DataStreamMonitoring } from '../lib/kds-monitoring';
 export class ApiGwKdsLambda extends cdk.Stack {
     constructor(scope: cdk.Construct, id: string, props: SolutionStackProps) {
         super(scope, id, props);
+
+        //---------------------------------------------------------------------
+        // App Sync
+        //---------------------------------------------------------------------
+
+        const graphql_api = new appsync.GraphqlApi( this , 'AppSync-API', {
+            name: 'cdk-appsync-api',
+            schema: appsync.Schema.fromAsset('graphql/schema.graphql')
+        });
+
+        const notesLambda = new lambda.Function( this, 'AppSyncNotesAPIHandler', {
+            runtime: lambda.Runtime.NODEJS_12_X,
+            handler: 'main.handler',
+            code: lambda.Code.fromAsset('lambda/app-sync-lambda')
+        });
+
+        // set the new Lambda function as a data source for the AppSync API
+        const lambdaDs = graphql_api.addLambdaDataSource('lambdaDataSource', notesLambda)
+
+        lambdaDs.createResolver({
+            typeName: "Query",
+            fieldName: "listNotes"
+        });
+
+        lambdaDs.createResolver({
+            typeName: "Mutation",
+            fieldName: "createNote"
+        });
+
+        const notes_table = new dynamodb.Table(this, 'notes-table', {
+            partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+            tableName: "notes-table"
+        });
+
+        notes_table.grantFullAccess(notesLambda)
+
+        notesLambda.addEnvironment('NOTES_TABLE', notes_table.tableName)
 
         //---------------------------------------------------------------------
         // API for GET operations configuration
@@ -302,6 +340,16 @@ export class ApiGwKdsLambda extends cdk.Stack {
         new cdk.CfnOutput(this, 'LambdaConsumerArn', {
             description: 'ARN of the AWS Lambda function',
             value: kdsToLambda.lambdaFunction.functionArn
+        });
+
+        new cdk.CfnOutput(this, 'GraphQL_API', {
+            description: 'ID of the graphql API',
+            value: graphql_api.graphqlUrl
+        });
+
+        new cdk.CfnOutput(this, 'Aux_API', {
+            description: 'ID of the aux API',
+            value: api.url
         });
     }
 }

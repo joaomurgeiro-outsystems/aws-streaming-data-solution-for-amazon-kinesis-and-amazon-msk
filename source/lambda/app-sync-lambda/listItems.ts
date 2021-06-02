@@ -1,9 +1,9 @@
 const AWS = require('aws-sdk');
 const dynamo = new AWS.DynamoDB.DocumentClient();
 
-async function listNotes() {
+async function listItems() {
     const params = {
-        TableName: process.env.NOTES_TABLE
+        TableName: process.env.ITEMS_TABLE
     }
 
     try {
@@ -15,4 +15,4 @@ async function listNotes() {
     }
 }
 
-export default listNotes;
+export default listItems;

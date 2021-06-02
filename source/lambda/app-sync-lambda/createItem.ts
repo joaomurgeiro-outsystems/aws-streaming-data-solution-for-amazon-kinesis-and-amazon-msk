@@ -1,20 +1,20 @@
 const AWS = require('aws-sdk');
 const dynamo = new AWS.DynamoDB.DocumentClient();
-import { Note } from './Note'
+import { Item } from './Item'
 
-async function createNote(note: Note) {
+async function createItem(item: Item) {
     const params = {
-        TableName: process.env.NOTES_TABLE,
-        Item: note
+        TableName: process.env.ITEMS_TABLE,
+        Item: item
     }
 
     try {
         await dynamo.put(params).promise()
-        return note;
+        return item;
     } catch (err) {
         console.log('DynamoDB error: ', err)
         return null
     }
 }
 
-export default createNote;
+export default createItem;

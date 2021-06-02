@@ -41,6 +41,7 @@
     "@aws-solutions-constructs/aws-kinesisfirehose-s3": "1.80.0",
     "@aws-solutions-constructs/aws-kinesisstreams-lambda": "1.80.0",
     "guid": "0.0.12",
+    "node-fetch": "^2.6.1",
     "source-map-support": "^0.5.16",
     "uuid": "^8.3.2"
   },

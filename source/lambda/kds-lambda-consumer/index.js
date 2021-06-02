@@ -11,6 +11,7 @@
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
  var AWS = require('aws-sdk');
+ var fetch = require('node-fetch');
 
  exports.handler = (event, context, callback) => {
      console.log(`Received event: ${JSON.stringify(event, null, 2)}`);
@@ -18,10 +19,12 @@
  
      event.Records.forEach(record => {
        const data = JSON.parse( Buffer.from(record.kinesis.data, 'base64').toString('ascii') ); // Base64 -> JSON
-       console.log(`Event Type: ${data.eventType}`);
+       //console.log(`Event Type: ${data.eventType}`);
  
        switch(data.eventType) {
          case 'put':     // insert node or link
+
+          // Insert in DynamoDB
            var params = {
              TableName: "nodes-links-table",
              Item:{
@@ -35,21 +38,54 @@
            dynamo.put(params, function(err, data) {
                if (err) { callback(err, null); } 
                else { 
-                 console.log("Successfull operation"); 
+                 //console.log("Successfull operation"); 
                  var response = {
                    statusCode: 200,
                    headers: {
-                       "Content-Type": "application/json",
                        "Access-Control-Allow-Origin": "*",
-                       "Access-Control-Allow-Methods": "GET,POST,OPTIONS"
                    },
                    body: JSON.stringify(data),
                    isBase64Encoded: false
                  };
                  callback(null, response);
+                 console.log(response)
                } 
            });
- 
+
+          // Send POST mutation request to AppSync API
+          const mutationCreate = JSON.stringify({
+            query: `mutation {
+              createItem(item: {
+                id: ${JSON.stringify(data.sortKey)}
+                type: ${JSON.stringify(data.type)}
+                graphId: ${JSON.stringify(data.partitionKey)}
+                info: "info"
+              }) {
+                id type graphId info
+              }
+            }`
+          });
+
+          const optionsCreate = {
+            method: 'POST',
+            body: mutationCreate,
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': process.env.GRAPHQL_KEY
+            }
+          };
+
+          fetch(process.env.GRAPHQL_URL, optionsCreate)
+              .then(res => res.json())
+              .then(json => {
+                  console.log(`JSON Response = ${JSON.stringify(json, null, 2)}`);
+                  callback(null, event);
+              })
+              .catch(err => {
+                  console.error(`FETCH ERROR: ${JSON.stringify(err, null, 2)}`);
+                  callback(err);
+              });
+          
          break; 
          case 'delete':     // delete one node or link
            var params = {
@@ -64,6 +100,41 @@
                if (err) { callback(err, null); } 
                else { console.log("Successfull operation"); callback(null, data); }
              });
+
+          // Send POST mutation request to AppSync API
+          const mutationDelete = JSON.stringify({
+            query: `mutation {
+              deleteItem(item: {
+                id: ${JSON.stringify(data.sortKey)}
+                type: ${JSON.stringify(data.type)}
+                graphId: ${JSON.stringify(data.partitionKey)}
+                info: ""
+              }) {
+                id type graphId info
+              }
+            }`
+          });
+
+          const optionsDelete = {
+            method: 'POST',
+            body: mutationDelete,
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': process.env.GRAPHQL_KEY
+            }
+          };
+
+          fetch(process.env.GRAPHQL_URL, optionsDelete)
+              .then(res => res.json())
+              .then(json => {
+                  console.log(`JSON Response = ${JSON.stringify(json, null, 2)}`);
+                  callback(null, event);
+              })
+              .catch(err => {
+                  console.error(`FETCH ERROR: ${JSON.stringify(err, null, 2)}`);
+                  callback(err);
+              });
+          
  
          break;
          default:

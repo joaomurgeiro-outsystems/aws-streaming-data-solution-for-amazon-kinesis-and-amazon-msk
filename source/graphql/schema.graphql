@@ -1,25 +1,31 @@
-type Note {
+type Item {
     id: ID!
-    name: String!
-    completed: Boolean!
+    type: String!
+    graphId: String!
+    info: String!
 }
 
-input NoteInput {
+input ItemInput {
     id: ID!
-    name: String!
-    completed: Boolean!
+    type: String!
+    graphId: String!
+    info: String!
 }
 
 type Query {
-    listNotes: [Note]
+    listItems: [Item]
 }
 
 type Mutation {
-    createNote(note: NoteInput!): Note
+    createItem(item: ItemInput!): Item
+    deleteItem(item: ItemInput!): Item
 }
 
 type Subscription {
-    onCreateNote: Note
-        @aws_subscribe(mutations: ["createNote"])
+    onCreateItem(graphId: String!): Item
+        @aws_subscribe(mutations: ["createItem"])
+
+    onDeleteItem(graphId: String!): Item
+        @aws_subscribe(mutations: ["deleteItem"])
 }
 

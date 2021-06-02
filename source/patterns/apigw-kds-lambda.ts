@@ -41,33 +41,39 @@ export class ApiGwKdsLambda extends cdk.Stack {
             schema: appsync.Schema.fromAsset('graphql/schema.graphql')
         });
 
-        const notesLambda = new lambda.Function( this, 'AppSyncNotesAPIHandler', {
+        const itemsLambda = new lambda.Function( this, 'AppSyncNotesAPIHandler', {
             runtime: lambda.Runtime.NODEJS_12_X,
             handler: 'main.handler',
             code: lambda.Code.fromAsset('lambda/app-sync-lambda')
         });
 
         // set the new Lambda function as a data source for the AppSync API
-        const lambdaDs = graphql_api.addLambdaDataSource('lambdaDataSource', notesLambda)
+        const lambdaDs = graphql_api.addLambdaDataSource('lambdaDataSource', itemsLambda)
 
         lambdaDs.createResolver({
             typeName: "Query",
-            fieldName: "listNotes"
+            fieldName: "listItems"
         });
 
         lambdaDs.createResolver({
             typeName: "Mutation",
-            fieldName: "createNote"
+            fieldName: "createItem"
         });
 
-        const notes_table = new dynamodb.Table(this, 'notes-table', {
+        lambdaDs.createResolver({
+            typeName: "Mutation",
+            fieldName: "deleteItem"
+        });
+
+        const items_table = new dynamodb.Table(this, 'items-table', {
             partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
-            tableName: "notes-table"
+            tableName: "items-table"
         });
 
-        notes_table.grantFullAccess(notesLambda)
+        items_table.grantFullAccess(itemsLambda)
 
-        notesLambda.addEnvironment('NOTES_TABLE', notes_table.tableName)
+        itemsLambda.addEnvironment('ITEMS_TABLE', items_table.tableName)
+        
 
         //---------------------------------------------------------------------
         // API for GET operations configuration
@@ -244,6 +250,10 @@ export class ApiGwKdsLambda extends cdk.Stack {
 
         nodes_links_table.grantReadWriteData(kdsToLambda.lambdaFunction);
 
+        const lambdaFunction = kdsToLambda.lambdaFunction;
+        lambdaFunction.addEnvironment('GRAPHQL_URL', graphql_api.graphqlUrl)
+        lambdaFunction.addEnvironment('GRAPHQL_KEY', graphql_api.apiKey! )
+
         //---------------------------------------------------------------------
         // Monitoring (dashboard and alarms) configuration
 
@@ -322,29 +332,39 @@ export class ApiGwKdsLambda extends cdk.Stack {
         on the AWS CloudFormation console.
         */
 
-        new cdk.CfnOutput(this, 'ProxyApiId', {
+        /*new cdk.CfnOutput(this, 'ProxyApiId', {
             description: 'ID of the proxy API',
             value: apiGwToKds.apiGateway.restApiId
-        });
+        });*/
 
         new cdk.CfnOutput(this, 'ProxyApiEndpoint', {
             description: 'Deployed URL of the proxy API',
             value: apiGwToKds.apiGateway.url
         });
 
-        new cdk.CfnOutput(this, 'DataStreamName', {
+        /*new cdk.CfnOutput(this, 'DataStreamName', {
             description: 'Name of the Amazon Kinesis Data stream',
             value: kds.Stream.streamName
-        });
+        });*/
 
-        new cdk.CfnOutput(this, 'LambdaConsumerArn', {
+        /*new cdk.CfnOutput(this, 'LambdaConsumerArn', {
             description: 'ARN of the AWS Lambda function',
             value: kdsToLambda.lambdaFunction.functionArn
-        });
+        });*/
 
         new cdk.CfnOutput(this, 'GraphQL_API', {
-            description: 'ID of the graphql API',
+            description: 'URL of the graphql API',
             value: graphql_api.graphqlUrl
+        });
+
+        new cdk.CfnOutput(this, 'GraphQL_ID', {
+            description: 'ID of the graphql API',
+            value: graphql_api.apiId
+        });
+
+        new cdk.CfnOutput(this, 'GraphQL_KEY', {
+            description: 'KEY of the graphql API',
+            value: graphql_api.apiKey!
         });
 
         new cdk.CfnOutput(this, 'Aux_API', {

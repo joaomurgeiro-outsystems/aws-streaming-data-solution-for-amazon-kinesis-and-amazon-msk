@@ -19,7 +19,7 @@
  
      event.Records.forEach(record => {
        const data = JSON.parse( Buffer.from(record.kinesis.data, 'base64').toString('ascii') ); // Base64 -> JSON
-       //console.log(`Event Type: ${data.eventType}`);
+       console.log(`Data: ${JSON.stringify(data)}`);
  
        switch(data.eventType) {
          case 'put':     // insert node or link
@@ -53,18 +53,48 @@
            });
 
           // Send POST mutation request to AppSync API
-          const mutationCreate = JSON.stringify({
-            query: `mutation {
-              createItem(item: {
-                id: ${JSON.stringify(data.sortKey)}
-                type: ${JSON.stringify(data.type)}
-                graphId: ${JSON.stringify(data.partitionKey)}
-                info: "info"
-              }) {
-                id type graphId info
-              }
-            }`
-          });
+          var mutationCreate = "";
+          var data_type = JSON.stringify(data.type);
+          
+          if ( data_type == `"node"`) {
+            console.log("Data.type: " + JSON.stringify(data.type));
+            mutationCreate = JSON.stringify({
+              query: `mutation {
+                createItem(item: {
+                  id: ${JSON.stringify(data.sortKey)}
+                  clientId: ${JSON.stringify(data.clientId)}
+                  type: ${JSON.stringify(data.type)}
+                  graphId: ${JSON.stringify(data.partitionKey)}
+                  px: ${JSON.stringify(data.info.px)}
+                  py: ${JSON.stringify(data.info.py)}
+                  node_type: ${JSON.stringify(data.info.type)}
+                  source: "s"
+                  target: "t"
+                }) {
+                  id clientId type graphId px py node_type source target
+                }
+              }`
+            });
+          } else if ( data_type == `"link"` ) {
+            console.log("Data.type: " + JSON.stringify(data.type));
+            mutationCreate = JSON.stringify({
+              query: `mutation {
+                createItem(item: {
+                  id: ${JSON.stringify(data.sortKey)}
+                  clientId: ${JSON.stringify(data.clientId)}
+                  type: ${JSON.stringify(data.type)}
+                  graphId: ${JSON.stringify(data.partitionKey)}
+                  px: 0.0
+                  py: 0.0
+                  node_type: "type"
+                  source: ${JSON.stringify(data.info.source.id)}
+                  target: ${JSON.stringify(data.info.target.id)}
+                }) {
+                  id clientId type graphId px py node_type source target
+                }
+              }`
+            });
+          }
 
           const optionsCreate = {
             method: 'POST',
@@ -106,11 +136,16 @@
             query: `mutation {
               deleteItem(item: {
                 id: ${JSON.stringify(data.sortKey)}
+                clientId: ${JSON.stringify(data.clientId)}
                 type: ${JSON.stringify(data.type)}
                 graphId: ${JSON.stringify(data.partitionKey)}
-                info: ""
+                px: 0.0
+                py: 0.0
+                node_type: "node_type"
+                source: "s"
+                target: "t"
               }) {
-                id type graphId info
+                id clientId type graphId px py node_type source target
               }
             }`
           });

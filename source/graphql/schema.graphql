@@ -1,15 +1,25 @@
 type Item {
     id: ID!
+    clientId: String!
     type: String!
     graphId: String!
-    info: String!
+    px: Float!
+    py: Float!
+    node_type: String!
+    source: String!
+    target: String!
 }
 
 input ItemInput {
     id: ID!
+    clientId: String!
     type: String!
     graphId: String!
-    info: String!
+    px: Float!
+    py: Float!
+    node_type: String!
+    source: String!
+    target: String!
 }
 
 type Query {

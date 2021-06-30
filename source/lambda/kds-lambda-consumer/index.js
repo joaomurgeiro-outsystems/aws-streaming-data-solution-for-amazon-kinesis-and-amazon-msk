@@ -36,7 +36,7 @@
            }
  
            dynamo.put(params, function(err, data) {
-               if (err) { callback(err, null); } 
+               if (err) { /*callback(err, null);*/ } 
                else { 
                  //console.log("Successfull operation"); 
                  var response = {
@@ -47,7 +47,7 @@
                    body: JSON.stringify(data),
                    isBase64Encoded: false
                  };
-                 callback(null, response);
+                 //callback(null, response);
                  console.log(response)
                } 
            });

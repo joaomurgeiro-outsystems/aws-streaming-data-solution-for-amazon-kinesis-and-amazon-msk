@@ -3,6 +3,7 @@ const dynamo = new AWS.DynamoDB.DocumentClient();
 import { Item } from './Item'
 
 async function createItem(item: Item) {
+    
     const params = {
         TableName: process.env.ITEMS_TABLE,
         Item: item

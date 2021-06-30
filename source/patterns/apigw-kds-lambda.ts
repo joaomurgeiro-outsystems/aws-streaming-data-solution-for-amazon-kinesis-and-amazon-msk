@@ -78,7 +78,7 @@ export class ApiGwKdsLambda extends cdk.Stack {
         //---------------------------------------------------------------------
         // API for GET operations configuration
 
-        const api = new apigw.RestApi(this, 'AUX-API');
+        const api = new apigw.RestApi(this, 'Graph-API');
 
         const lambdaGet = new lambda.Function( this, 'GetHandler', {
             runtime: lambda.Runtime.NODEJS_12_X,

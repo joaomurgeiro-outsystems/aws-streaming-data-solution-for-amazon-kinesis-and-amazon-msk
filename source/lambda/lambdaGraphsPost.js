@@ -10,7 +10,8 @@ exports.handler = (event, context, callback) => {
         TableName: "graphs-table",
         Item:{
             "userId": event.queryStringParameters.userId,
-            "graphId": event.queryStringParameters.graphId
+            "graphId": event.queryStringParameters.graphId,
+            "graphName": event.queryStringParameters.graphName
         }
     }
 

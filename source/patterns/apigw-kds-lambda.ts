@@ -252,7 +252,7 @@ export class ApiGwKdsLambda extends cdk.Stack {
 
         const lambdaFunction = kdsToLambda.lambdaFunction;
         lambdaFunction.addEnvironment('GRAPHQL_URL', graphql_api.graphqlUrl)
-        lambdaFunction.addEnvironment('GRAPHQL_KEY', graphql_api.apiKey! )
+        lambdaFunction.addEnvironment('GRAPHQL_KEY', "da2-i4d5keiyubfxnmrmdkuvmzezae" /*graphql_api.apiKey!*/ )
 
         //---------------------------------------------------------------------
         // Monitoring (dashboard and alarms) configuration

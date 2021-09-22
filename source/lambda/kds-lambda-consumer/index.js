@@ -39,16 +39,16 @@
                if (err) { /*callback(err, null);*/ } 
                else { 
                  //console.log("Successfull operation"); 
-                 var response = {
+                 /*var response = {
                    statusCode: 200,
                    headers: {
                        "Access-Control-Allow-Origin": "*",
                    },
                    body: JSON.stringify(data),
                    isBase64Encoded: false
-                 };
+                 };*/
                  //callback(null, response);
-                 console.log(response)
+                 //console.log(response)
                } 
            });
 
@@ -127,8 +127,8 @@
            }
  
            dynamo.delete(params, function(err, data) {
-               if (err) { callback(err, null); } 
-               else { console.log("Successfull operation"); callback(null, data); }
+               if (err) { /*callback(err, null);*/ } 
+               else { console.log("Successfull operation"); /*callback(null, data);*/ }
              });
 
           // Send POST mutation request to AppSync API

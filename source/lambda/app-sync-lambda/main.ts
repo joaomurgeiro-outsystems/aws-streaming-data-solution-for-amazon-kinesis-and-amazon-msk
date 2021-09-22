@@ -1,5 +1,5 @@
 //import createItem from './createItem';
-import deleteItem from './deleteItem';
+//import deleteItem from './deleteItem';
 import listItems from './listItems';
 import { Item } from './Item';
 
@@ -16,9 +16,9 @@ type AppSyncEvent = {
 exports.handler = async (event: AppSyncEvent) => {
     switch (event.info.fieldName) {
         case "createItem":
-            return event.arguments.item//await createItem(event.arguments.item);
+            return event.arguments.item; //await createItem(event.arguments.item);
         case "deleteItem":
-            return await deleteItem(event.arguments.item);
+            return event.arguments.item; //await deleteItem(event.arguments.item);
         case "listItems":
             return await listItems();
         default:

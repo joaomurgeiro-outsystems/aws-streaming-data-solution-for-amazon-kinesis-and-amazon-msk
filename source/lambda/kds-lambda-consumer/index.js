@@ -35,20 +35,22 @@
              }
            }
  
-           dynamo.put(params, function(err, data) {
-               if (err) { /*callback(err, null);*/ } 
+           dynamo.put(params, function(err, result) {
+               if (err) { callback(err, null); } 
                else { 
-                 //console.log("Successfull operation"); 
-                 /*var response = {
+                 console.log("Successfull operation"); 
+                 var response = {
                    statusCode: 200,
                    headers: {
-                       "Access-Control-Allow-Origin": "*",
-                   },
-                   body: JSON.stringify(data),
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "GET,POST,OPTIONS"
+                  },
+                   body: JSON.stringify(result),
                    isBase64Encoded: false
-                 };*/
-                 //callback(null, response);
-                 //console.log(response)
+                 };
+                 console.log("Successful operation!")
+                 callback(null, response); //console.log(response)
                } 
            });
 
@@ -109,11 +111,11 @@
               .then(res => res.json())
               .then(json => {
                   console.log(`JSON Response = ${JSON.stringify(json, null, 2)}`);
-                  callback(null, event);
+                  //callback(null, event);
               })
               .catch(err => {
                   console.error(`FETCH ERROR: ${JSON.stringify(err, null, 2)}`);
-                  callback(err);
+                  //callback(err);
               });
           
          break; 

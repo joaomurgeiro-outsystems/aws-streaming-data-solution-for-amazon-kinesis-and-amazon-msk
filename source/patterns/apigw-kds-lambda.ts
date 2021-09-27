@@ -17,6 +17,8 @@ import * as logs from '@aws-cdk/aws-logs';
 import * as dynamodb from '@aws-cdk/aws-dynamodb';
 import * as apigw from '@aws-cdk/aws-apigateway';
 import * as appsync from '@aws-cdk/aws-appsync';
+/*import * as cloudfront from '@aws-cdk/aws-cloudfront';
+import * as origins from '@aws-cdk/aws-cloudfront-origins';*/
 
 
 import { ApiGatewayToKinesisStreams } from '@aws-solutions-constructs/aws-apigateway-kinesisstreams';
@@ -31,6 +33,14 @@ import { DataStreamMonitoring } from '../lib/kds-monitoring';
 export class ApiGwKdsLambda extends cdk.Stack {
     constructor(scope: cdk.Construct, id: string, props: SolutionStackProps) {
         super(scope, id, props);
+
+        //---------------------------------------------------------------------
+        // CloudFront
+        //---------------------------------------------------------------------
+
+        /*new cloudfront.Distribution(this, 'myDist', {
+            defaultBehavior: { origin: new origins.HttpOrigin('https://joiccfos90.execute-api.us-east-1.amazonaws.com/prod') },
+          });*/
 
         //---------------------------------------------------------------------
         // App Sync
@@ -252,7 +262,7 @@ export class ApiGwKdsLambda extends cdk.Stack {
 
         const lambdaFunction = kdsToLambda.lambdaFunction;
         lambdaFunction.addEnvironment('GRAPHQL_URL', graphql_api.graphqlUrl)
-        lambdaFunction.addEnvironment('GRAPHQL_KEY', "da2-i4d5keiyubfxnmrmdkuvmzezae" /*graphql_api.apiKey!*/ )
+        lambdaFunction.addEnvironment('GRAPHQL_KEY', /*"da2-fq4wiotq2jgztmqscgahvnlpjm"*/ graphql_api.apiKey! )
 
         //---------------------------------------------------------------------
         // Monitoring (dashboard and alarms) configuration

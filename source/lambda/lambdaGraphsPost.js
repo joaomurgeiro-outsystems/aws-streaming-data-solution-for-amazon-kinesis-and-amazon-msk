@@ -4,6 +4,7 @@ const dynamo = new AWS.DynamoDB.DocumentClient();
 
 exports.handler = (event, context, callback) => {
 
+    console.log("Event: ")
     console.log(event)
 
     var params = {
@@ -15,7 +16,7 @@ exports.handler = (event, context, callback) => {
         }
     }
 
-    dynamo.put(params, function(err, data) {
+    dynamo.put(params, function(err, result) {
         if (err) { callback(err, null); } 
         else { 
             console.log("Successfull operation"); 
@@ -26,7 +27,7 @@ exports.handler = (event, context, callback) => {
                     "Access-Control-Allow-Origin": "*",
                     "Access-Control-Allow-Methods": "GET,POST,OPTIONS"
                 },
-                body: JSON.stringify(data),
+                body: JSON.stringify(result),
                 isBase64Encoded: false
             };
             callback(null, response);

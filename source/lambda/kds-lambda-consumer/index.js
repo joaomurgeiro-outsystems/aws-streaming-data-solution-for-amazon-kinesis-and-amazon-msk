@@ -36,21 +36,21 @@
            }
  
            dynamo.put(params, function(err, result) {
-               if (err) { callback(err, null); } 
+               if (err) { /*callback(err, null);*/ } 
                else { 
                  console.log("Successfull operation"); 
                  var response = {
                    statusCode: 200,
                    headers: {
-                    "Content-Type": "application/json",
+                    //"Content-Type": "application/json",
                     "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Methods": "GET,POST,OPTIONS"
+                    //"Access-Control-Allow-Methods": "GET,POST,OPTIONS"
                   },
                    body: JSON.stringify(result),
                    isBase64Encoded: false
                  };
                  console.log("Successful operation!")
-                 callback(null, response); //console.log(response)
+                 //callback(null, response); //console.log(response)
                } 
            });
 

@@ -35,14 +35,6 @@ export class ApiGwKdsLambda extends cdk.Stack {
         super(scope, id, props);
 
         //---------------------------------------------------------------------
-        // CloudFront
-        //---------------------------------------------------------------------
-
-        /*new cloudfront.Distribution(this, 'myDist', {
-            defaultBehavior: { origin: new origins.HttpOrigin('https://joiccfos90.execute-api.us-east-1.amazonaws.com/prod') },
-          });*/
-
-        //---------------------------------------------------------------------
         // App Sync
         //---------------------------------------------------------------------
 
@@ -60,6 +52,7 @@ export class ApiGwKdsLambda extends cdk.Stack {
         // set the new Lambda function as a data source for the AppSync API
         const lambdaDs = graphql_api.addLambdaDataSource('lambdaDataSource', itemsLambda)
 
+        
         lambdaDs.createResolver({
             typeName: "Query",
             fieldName: "listItems"
